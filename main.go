@@ -4,65 +4,13 @@ import (
 	"github.com/gotk3/gotk3/cairo"
 	"github.com/gotk3/gotk3/gtk"
     "github.com/gotk3/gotk3/glib"
-    "math/rand"
 )
 
 const (
-    WIDTH int = 800
-    HEIGHT int = 500
+    WIDTH int = 1366
+    HEIGHT int = 736
     GRIDSIZE int = 5
 )
-
-var board[HEIGHT/GRIDSIZE][WIDTH/GRIDSIZE] int;
-var run bool;
-
-func gameOfLife()  {
-    if len(board) == 0 || len(board[0]) == 0 {
-        return
-    }
-    m := len(board)
-    n := len(board[0])
-    for i := 0; i < m; i++ {
-        for j := 0; j < n; j++ {
-            lives := 0
-            lives += isLive(i-1, j-1)
-            lives += isLive(i-1, j)
-            lives += isLive(i-1, j+1)
-            lives += isLive(i, j-1)
-            lives += isLive(i, j+1)
-            lives += isLive(i+1, j-1)
-            lives += isLive(i+1, j)
-            lives += isLive(i+1, j+1)
-            if board[i][j] == 0 {
-                if lives == 3 {
-                    board[i][j] = 2
-                }
-            } else {
-                if lives < 2 || lives > 3 {
-                    board[i][j] = 3
-                }
-            }
-        }
-    }
-    
-    for i := 0; i < m; i++ {
-        for j := 0; j < n; j++ {
-            if board[i][j] == 2 {
-                board[i][j] = 1
-            } else if board[i][j] == 3 {
-                board[i][j] = 0
-            }
-        }
-    }
-}
-
-func isLive(i int, j int) int {
-    if i < 0 || j < 0 || i >= len(board) || j >= len(board[0]) || board[i][j] == 0 || board[i][j] == 2 {
-        return 0
-    }
-    return 1
-}
-
 
 func main() {
 	gtk.Init(nil)
@@ -73,29 +21,26 @@ func main() {
     da.SetSizeRequest(WIDTH,HEIGHT)
 	grid,_ := gtk.GridNew()
     win.Add(grid)
-    button1,_ := gtk.ButtonNewWithLabel("B1")
-    button2,_ := gtk.ButtonNewWithLabel("B2")
-    grid.Attach(da,0,0,2,1)
-    grid.Attach(button1,0,1,1,1)
-    grid.Attach(button2,1,1,1,1)
+    butStart,_ := gtk.ButtonNewWithLabel("Start")
+    butStop,_ := gtk.ButtonNewWithLabel("Stop")
+    butRand,_ := gtk.ButtonNewWithLabel("Random")
+    grid.Attach(da,0,0,3,1)
+    grid.Attach(butRand,0,1,1,1)
+    grid.Attach(butStart,1,1,1,1)
+    grid.Attach(butStop,2,1,1,1)
 	win.SetTitle("Game of Life")
 	win.Connect("destroy", gtk.MainQuit)
 	win.ShowAll()
-    run = false
 
-    for i := 0; i<HEIGHT/GRIDSIZE; i++ {
-        for j := 0; j<WIDTH/GRIDSIZE; j++ {
-            p := rand.Float64()
-            if p < 0.2 {
-                board[i][j] = 1
-            }
-        }
+    board := make([][]int, HEIGHT/GRIDSIZE)
+    for i := range board {
+        board[i] = make([]int, WIDTH/GRIDSIZE)
     }
 
 	// Event handlers
 	da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
         // backgroud
-        cr.SetSourceRGB(1, 1, 1)
+        cr.SetSourceRGB(0.1, 0.1, 0.1)
 		cr.Rectangle(0, 0, float64(WIDTH), float64(HEIGHT))
 		cr.Fill()
 
@@ -111,7 +56,7 @@ func main() {
             cr.LineTo(float64(i*GRIDSIZE), float64(HEIGHT));
             cr.Stroke();
         }
-        cr.SetSourceRGB(0, 0, 0)
+        cr.SetSourceRGB(0.25, 1, 0.7)
 
         // map array
         for i := 0; i<HEIGHT/GRIDSIZE; i++ {
@@ -126,16 +71,20 @@ func main() {
 
     var id glib.SourceHandle
 
-    button1.Connect("clicked", func(b *gtk.Button) {
-        run = true
+    butRand.Connect("clicked", func(b *gtk.Button) {
+        randBoard(board)
+        win.QueueDraw()
+    }) 
+
+    butStart.Connect("clicked", func(b *gtk.Button) {
         id = glib.TimeoutAdd(100,func() bool{
-            gameOfLife()
+            gameOfLife(board)
             win.QueueDraw()
             return true
         })
         
     })
-    button2.Connect("clicked", func(b *gtk.Button) {
+    butStop.Connect("clicked", func(b *gtk.Button) {
         glib.SourceRemove(id)
     })
 
