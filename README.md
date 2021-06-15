@@ -11,7 +11,7 @@ The Game of Life, also known simply as Life, is a cellular automaton devised by 
 
 ## Usage
 
-This repository is built with gtk3 binding for go making it a cross-platform gui. To use it make sure you have go installed in your machine. Using it is simple by just building the project and running the excecutable
+This repository is built with gtk3 binding for go making it a cross-platform gui. This binding is gotk3, which you can find <a href="https://github.com/gotk3/gotk3">here</a>. To use it make sure you have go installed in your machine and then go get gotk3 😉. Using it is simple just by building the project and running the excecutable
 
 ```bash
 go build
